@@ -9,10 +9,24 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
-    email = Column(String, unique=True)
 
-    orders = relationship("Order", back_populates="user")
+    name = Column(String)
+
+    email = Column(
+        String,
+        unique=True,
+        nullable=False
+    )
+
+    password = Column(
+        String,
+        nullable=False
+    )
+
+    orders = relationship(
+        "Order",
+        back_populates="user"
+    )
 
 
 class Product(Base):
