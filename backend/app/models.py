@@ -52,7 +52,19 @@ class Order(Base):
 class Event(Base):
     __tablename__ = "events"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
     user_id = Column(Integer)
+
     event_type = Column(String)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+
+    event_value = Column(String)
+
+    timestamp = Column(
+        DateTime,
+        default=datetime.utcnow
+    )

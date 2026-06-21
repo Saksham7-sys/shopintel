@@ -2,9 +2,12 @@ from fastapi import FastAPI
 
 from app.database import engine
 from app.models import Base
-from app.routers import products
-from app.routers import products, users
-from app.routers import products, users, orders
+from app.routers import (
+    users,
+    products,
+    orders,
+    events
+)
 
 app = FastAPI()
 
@@ -18,3 +21,7 @@ app.include_router(orders.router)
 @app.get("/")
 def home():
     return {"message": "ShopIntel Backend Running"}
+
+app.include_router(
+    events.router
+)
