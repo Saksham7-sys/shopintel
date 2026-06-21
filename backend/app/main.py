@@ -6,7 +6,8 @@ from app.routers import (
     users,
     products,
     orders,
-    events
+    events,
+    analytics
 )
 
 app = FastAPI()
@@ -16,7 +17,7 @@ Base.metadata.create_all(bind=engine)
 app.include_router(products.router)
 app.include_router(users.router)
 app.include_router(orders.router)
-
+app.include_router(analytics.router)
 
 @app.get("/")
 def home():
