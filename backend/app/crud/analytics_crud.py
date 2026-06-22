@@ -1,19 +1,54 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from sqlalchemy import func, distinct
 from sqlalchemy.orm import Session
 
-from app.models import Order, Event, Product
+from app.models import Order, Event, Product, User
 
+def get_date_range(days: int | None = None, start_date: str | None = None, end_date: str | None = None):
+    if start_date and end_date:
+        start = datetime.strptime(start_date, "%Y-%m-%d")
+        end = datetime.strptime(end_date, "%Y-%m-%d")
+        end = end + timedelta(days=1)  # include full end date
+        return start, end
 
-def get_total_revenue(db: Session):
-    revenue = db.query(func.sum(Order.total_amount)).scalar()
-    return revenue if revenue is not None else 0
+    if days is not None:
+        end = datetime.utcnow()
+        start = end - timedelta(days=days)
+        return start, end
 
+    return None, None
 
-def get_total_orders(db: Session):
-    orders = db.query(func.count(Order.id)).scalar()
-    return orders if orders is not None else 0
+def get_total_revenue(
+    db: Session,
+    days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None
+):
+    start, end = get_date_range(days, start_date, end_date)
 
+    query = db.query(func.sum(Order.total_amount))
+
+    if start and end:
+        query = query.filter(Order.created_at >= start, Order.created_at < end)
+
+    revenue = query.scalar()
+    return revenue if revenue else 0
+
+def get_total_orders(
+    db: Session,
+    days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None
+):
+    start, end = get_date_range(days, start_date, end_date)
+
+    query = db.query(func.count(Order.id))
+
+    if start and end:
+        query = query.filter(Order.created_at >= start, Order.created_at < end)
+
+    orders = query.scalar()
+    return orders if orders else 0
 
 def get_dau(db: Session):
     active_users = db.query(
@@ -114,16 +149,24 @@ def get_sales_by_category(db: Session):
 
 
 
-def get_revenue_trend(db: Session, days: int = 30):
-    start_date = datetime.utcnow() - timedelta(days=days)
+def get_revenue_trend(
+    db: Session,
+    days: int | None = 30,
+    start_date: str | None = None,
+    end_date: str | None = None
+):
+    start, end = get_date_range(days, start_date, end_date)
+
+    query = db.query(
+        func.date(Order.created_at).label("date"),
+        func.sum(Order.total_amount).label("revenue")
+    )
+
+    if start and end:
+        query = query.filter(Order.created_at >= start, Order.created_at < end)
 
     results = (
-        db.query(
-            func.date(Order.created_at).label("date"),
-            func.sum(Order.total_amount).label("revenue")
-        )
-        .filter(Order.created_at >= start_date)
-        .group_by(func.date(Order.created_at))
+        query.group_by(func.date(Order.created_at))
         .order_by(func.date(Order.created_at))
         .all()
     )
@@ -136,17 +179,24 @@ def get_revenue_trend(db: Session, days: int = 30):
         for row in results
     ]
 
+def get_orders_trend(
+    db: Session,
+    days: int | None = 30,
+    start_date: str | None = None,
+    end_date: str | None = None
+):
+    start, end = get_date_range(days, start_date, end_date)
 
-def get_orders_trend(db: Session, days: int = 30):
-    start_date = datetime.utcnow() - timedelta(days=days)
+    query = db.query(
+        func.date(Order.created_at).label("date"),
+        func.count(Order.id).label("orders")
+    )
+
+    if start and end:
+        query = query.filter(Order.created_at >= start, Order.created_at < end)
 
     results = (
-        db.query(
-            func.date(Order.created_at).label("date"),
-            func.count(Order.id).label("orders")
-        )
-        .filter(Order.created_at >= start_date)
-        .group_by(func.date(Order.created_at))
+        query.group_by(func.date(Order.created_at))
         .order_by(func.date(Order.created_at))
         .all()
     )
@@ -159,17 +209,24 @@ def get_orders_trend(db: Session, days: int = 30):
         for row in results
     ]
 
+def get_dau_trend(
+    db: Session,
+    days: int | None = 30,
+    start_date: str | None = None,
+    end_date: str | None = None
+):
+    start, end = get_date_range(days, start_date, end_date)
 
-def get_dau_trend(db: Session, days: int = 30):
-    start_date = datetime.utcnow() - timedelta(days=days)
+    query = db.query(
+        func.date(Event.timestamp).label("date"),
+        func.count(distinct(Event.user_id)).label("dau")
+    )
+
+    if start and end:
+        query = query.filter(Event.timestamp >= start, Event.timestamp < end)
 
     results = (
-        db.query(
-            func.date(Event.timestamp).label("date"),
-            func.count(distinct(Event.user_id)).label("dau")
-        )
-        .filter(Event.timestamp >= start_date)
-        .group_by(func.date(Event.timestamp))
+        query.group_by(func.date(Event.timestamp))
         .order_by(func.date(Event.timestamp))
         .all()
     )
@@ -240,3 +297,91 @@ def get_category_revenue_trend(db: Session, days: int = 30):
         }
         for row in results
     ]
+
+
+def get_top_users(
+    db: Session,
+    limit: int = 10,
+    days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None
+):
+    start, end = get_date_range(days, start_date, end_date)
+
+    query = (
+        db.query(
+            User.id.label("user_id"),
+            User.name,
+            User.email,
+            func.sum(Order.total_amount).label("total_spent"),
+            func.count(Order.id).label("total_orders")
+        )
+        .join(Order, Order.user_id == User.id)
+    )
+
+    if start and end:
+        query = query.filter(Order.created_at >= start, Order.created_at < end)
+
+    results = (
+        query.group_by(User.id, User.name, User.email)
+        .order_by(func.sum(Order.total_amount).desc())
+        .limit(limit)
+        .all()
+    )
+
+    return [
+        {
+            "user_id": row.user_id,
+            "name": row.name,
+            "email": row.email,
+            "total_spent": float(row.total_spent) if row.total_spent else 0,
+            "total_orders": row.total_orders
+        }
+        for row in results
+    ]
+
+def get_customer_breakdown(
+    db: Session,
+    days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None
+):
+    start, end = get_date_range(days, start_date, end_date)
+
+    query = db.query(Order.user_id, func.count(Order.id).label("order_count"))
+
+    if start and end:
+        query = query.filter(Order.created_at >= start, Order.created_at < end)
+
+    user_order_counts = query.group_by(Order.user_id).all()
+
+    total_customers = len(user_order_counts)
+    new_customers = sum(1 for row in user_order_counts if row.order_count == 1)
+    returning_customers = sum(1 for row in user_order_counts if row.order_count > 1)
+
+    return {
+        "total_customers": total_customers,
+        "new_customers": new_customers,
+        "returning_customers": returning_customers
+    }
+
+def get_customer_repeat_rate(
+    db: Session,
+    days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None
+):
+    breakdown = get_customer_breakdown(db, days, start_date, end_date)
+
+    total_customers = breakdown["total_customers"]
+    returning_customers = breakdown["returning_customers"]
+
+    repeat_rate = 0
+    if total_customers > 0:
+        repeat_rate = (returning_customers / total_customers) * 100
+
+    return {
+        "total_customers": total_customers,
+        "returning_customers": returning_customers,
+        "repeat_rate": round(repeat_rate, 2)
+    }

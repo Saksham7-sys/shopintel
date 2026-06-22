@@ -15,7 +15,10 @@ from app.crud.analytics_crud import (
     get_orders_trend,
     get_dau_trend,
     get_funnel_summary,
-    get_category_revenue_trend
+    get_category_revenue_trend,
+    get_top_users,
+    get_customer_breakdown,
+    get_customer_repeat_rate
 )
 router = APIRouter(
     prefix="/analytics",
@@ -24,18 +27,26 @@ router = APIRouter(
 
 
 @router.get("/revenue")
-def revenue(db: Session = Depends(get_db)):
+def total_revenue(
+    days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    db: Session = Depends(get_db)
+):
     return {
-        "total_revenue": get_total_revenue(db)
+        "total_revenue": get_total_revenue(db, days, start_date, end_date)
     }
-
 
 @router.get("/orders")
-def orders(db: Session = Depends(get_db)):
+def total_orders(
+    days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    db: Session = Depends(get_db)
+):
     return {
-        "total_orders": get_total_orders(db)
+        "total_orders": get_total_orders(db, days, start_date, end_date)
     }
-
 
 @router.get("/dau")
 def dau(db: Session = Depends(get_db)):
@@ -78,19 +89,39 @@ def sales_by_category(db: Session = Depends(get_db)):
     }
 
 @router.get("/revenue-trend")
-def revenue_trend(days: int = 30, db: Session = Depends(get_db)):
-    return {"revenue_trend": get_revenue_trend(db, days)}
+def revenue_trend(
+    days: int | None = 30,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    db: Session = Depends(get_db)
+):
+    return {
+        "revenue_trend": get_revenue_trend(db, days, start_date, end_date)
+    }
 
 
 @router.get("/orders-trend")
-def orders_trend(days: int = 30, db: Session = Depends(get_db)):
-    return {"orders_trend": get_orders_trend(db, days)}
+def orders_trend(
+    days: int | None = 30,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    db: Session = Depends(get_db)
+):
+    return {
+        "orders_trend": get_orders_trend(db, days, start_date, end_date)
+    }
 
 
 @router.get("/dau-trend")
-def dau_trend(days: int = 30, db: Session = Depends(get_db)):
-    return {"dau_trend": get_dau_trend(db, days)}
-
+def dau_trend(
+    days: int | None = 30,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    db: Session = Depends(get_db)
+):
+    return {
+        "dau_trend": get_dau_trend(db, days, start_date, end_date)
+    }
 
 @router.get("/funnel")
 def funnel(db: Session = Depends(get_db)):
@@ -101,4 +132,44 @@ def funnel(db: Session = Depends(get_db)):
 def category_revenue_trend(days: int = 30, db: Session = Depends(get_db)):
     return {
         "category_revenue_trend": get_category_revenue_trend(db, days)
+    }
+
+@router.get("/top-users")
+def top_users(
+    limit: int = 10,
+    days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    db: Session = Depends(get_db)
+):
+    return {
+        "top_users": get_top_users(db, limit, days, start_date, end_date)
+    }
+
+
+@router.get("/customer-breakdown")
+def customer_breakdown(
+    days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    db: Session = Depends(get_db)
+):
+    return {
+        "customer_breakdown": get_customer_breakdown(
+            db, days, start_date, end_date
+        )
+    }
+
+
+@router.get("/customer-repeat-rate")
+def customer_repeat_rate(
+    days: int | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    db: Session = Depends(get_db)
+):
+    return {
+        "customer_repeat_rate": get_customer_repeat_rate(
+            db, days, start_date, end_date
+        )
     }
