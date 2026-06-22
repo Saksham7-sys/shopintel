@@ -4,6 +4,7 @@ from datetime import datetime
 
 class OrderCreate(BaseModel):
     user_id: int
+    product_id: int
     total_amount: float
 
 

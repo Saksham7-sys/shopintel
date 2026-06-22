@@ -37,16 +37,48 @@ class Product(Base):
     category = Column(String)
     price = Column(Float)
 
+    # optional but recommended
+    orders = relationship(
+        "Order",
+        back_populates="product"
+    )
+
 
 class Order(Base):
     __tablename__ = "orders"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    total_amount = Column(Float)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
-    user = relationship("User", back_populates="orders")
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id")
+    )
+
+    product_id = Column(
+        Integer,
+        ForeignKey("products.id")
+    )
+
+    total_amount = Column(Float)
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+    user = relationship(
+        "User",
+        back_populates="orders"
+    )
+
+    product = relationship(
+        "Product",
+        back_populates="orders"
+    )
 
 
 class Event(Base):
