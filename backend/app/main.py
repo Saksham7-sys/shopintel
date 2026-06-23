@@ -11,9 +11,7 @@ from app.routers import (
     analytics
 )
 
-app = FastAPI(
-    title="ShopIntel API"
-)
+app = FastAPI(title="ShopIntel API")
 
 Base.metadata.create_all(bind=engine)
 
@@ -22,7 +20,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "https://shopintel-livid.vercel.app/",   # replace after Vercel deploy
+        "https://shopintel-livid.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
