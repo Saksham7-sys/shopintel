@@ -18,7 +18,9 @@ from app.crud.analytics_crud import (
     get_category_revenue_trend,
     get_top_users,
     get_customer_breakdown,
-    get_customer_repeat_rate
+    get_customer_repeat_rate,
+    get_revenue_forecast,
+    get_revenue_forecast_summary
 )
 router = APIRouter(
     prefix="/analytics",
@@ -172,4 +174,18 @@ def customer_repeat_rate(
         "customer_repeat_rate": get_customer_repeat_rate(
             db, days, start_date, end_date
         )
+    }
+
+@router.get("/revenue-forecast")
+def revenue_forecast(days: int = 7):
+    return {
+        "forecast_days": days,
+        "revenue_forecast": get_revenue_forecast(days)
+    }
+
+
+@router.get("/revenue-forecast-summary")
+def revenue_forecast_summary(days: int = 7):
+    return {
+        "revenue_forecast_summary": get_revenue_forecast_summary(days)
     }

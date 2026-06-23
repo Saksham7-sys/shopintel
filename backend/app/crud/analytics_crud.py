@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, date
 from sqlalchemy import func, distinct
 from sqlalchemy.orm import Session
-
+from app.ml.predict_forecast import predict_revenue_forecast
 from app.models import Order, Event, Product, User
 
 def get_date_range(days: int | None = None, start_date: str | None = None, end_date: str | None = None):
@@ -384,4 +384,30 @@ def get_customer_repeat_rate(
         "total_customers": total_customers,
         "returning_customers": returning_customers,
         "repeat_rate": round(repeat_rate, 2)
+    }
+def get_revenue_forecast(days: int = 7):
+    forecast = predict_revenue_forecast(days)
+    return forecast
+
+
+def get_revenue_forecast_summary(days: int = 7):
+    forecast = predict_revenue_forecast(days)
+
+    if not forecast:
+        return {
+            "forecast_days": days,
+            "total_predicted_revenue": 0,
+            "average_predicted_revenue": 0,
+            "max_predicted_revenue": 0,
+            "min_predicted_revenue": 0
+        }
+
+    values = [item["predicted_revenue"] for item in forecast]
+
+    return {
+        "forecast_days": days,
+        "total_predicted_revenue": round(sum(values), 2),
+        "average_predicted_revenue": round(sum(values) / len(values), 2),
+        "max_predicted_revenue": round(max(values), 2),
+        "min_predicted_revenue": round(min(values), 2)
     }
