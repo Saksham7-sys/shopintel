@@ -31,3 +31,19 @@ export function shortCurrency(value) {
   }
   return `₹${num.toFixed(0)}`;
 }
+
+export function buildFilterParams(filters = {}) {
+  const params = {};
+
+  if (filters.days !== undefined && filters.days !== null && filters.days !== "") {
+    params.days = filters.days;
+  }
+  if (filters.start_date) {
+    params.start_date = filters.start_date;
+  }
+  if (filters.end_date) {
+    params.end_date = filters.end_date;
+  }
+
+  return params;
+}

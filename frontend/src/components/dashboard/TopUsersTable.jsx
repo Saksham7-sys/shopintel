@@ -28,7 +28,7 @@ function TopUsersTable({ data = [] }) {
                 </td>
               </tr>
             ) : (
-              data.slice(0, 8).map((item) => (
+              data.slice(0, 10).map((item) => (
                 <tr
                   key={item.user_id}
                   className="border-b border-slate-50 last:border-b-0"

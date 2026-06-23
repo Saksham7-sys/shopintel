@@ -27,7 +27,7 @@ function TopProductsTable({ data = [] }) {
                 </td>
               </tr>
             ) : (
-              data.slice(0, 8).map((item, index) => (
+              data.slice(0, 10).map((item, index) => (
                 <tr
                   key={`${item.product_name}-${index}`}
                   className="border-b border-slate-50 last:border-b-0"
